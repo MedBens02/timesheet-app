@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <display-name>Timesheet Management Application</display-name>
+    <description>JEE-based timesheet management system for project tracking</description>
+
+    <!-- Welcome Files -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- Servlets configured via @WebServlet annotations -->
+
+    <!-- Session Configuration -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>false</secure>
+        </cookie-config>
+    </session-config>
+
+    <!-- Security Constraints -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Protected Area</web-resource-name>
+            <url-pattern>/dashboard</url-pattern>
+            <url-pattern>/projects</url-pattern>
+            <url-pattern>/tasks</url-pattern>
+            <url-pattern>/timesheets</url-pattern>
+            <url-pattern>/jsp/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>NONE</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- Context Parameters -->
+    <context-param>
+        <param-name>application.name</param-name>
+        <param-value>Timesheet Management System</param-value>
+    </context-param>
+
+    <context-param>
+        <param-name>application.version</param-name>
+        <param-value>1.0.0</param-value>
+    </context-param>
+</web-app>
