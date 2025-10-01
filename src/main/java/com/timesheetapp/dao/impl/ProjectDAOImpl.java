@@ -20,12 +20,12 @@ public class ProjectDAOImpl extends BaseDAOImpl<Project, Long> implements Projec
     
     @Override
     public List<Project> findActiveProjects() {
-        return findByStatus(Project.ProjectStatus.ACTIVE);
+        return findByStatus(Project.ProjectStatus.ACTIF);
     }
-    
+
     @Override
     public List<Project> findCompletedProjects() {
-        return findByStatus(Project.ProjectStatus.COMPLETED);
+        return findByStatus(Project.ProjectStatus.TERMINE);
     }
     
     @Override

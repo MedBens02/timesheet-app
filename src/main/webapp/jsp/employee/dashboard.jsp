@@ -249,6 +249,18 @@
             </div>
         </div>
 
+        <!-- Quick Actions -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 1rem; color: #333;">Quick Actions</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="${pageContext.request.contextPath}/project/list" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📁 My Projects</a>
+                <a href="#" style="padding: 10px 20px; background: #28a745; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📋 My Tasks</a>
+                <a href="#" style="padding: 10px 20px; background: #17a2b8; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">⏱️ Register Hours</a>
+                <a href="#" style="padding: 10px 20px; background: #ffc107; color: #333; border-radius: 6px; text-decoration: none; font-weight: 500;">📊 Timesheet History</a>
+                <a href="${pageContext.request.contextPath}/logout" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">🚪 Logout</a>
+            </div>
+        </div>
+
         <div class="content-grid">
             <div class="card">
                 <div class="card-header">My Active Tasks</div>
@@ -269,7 +281,7 @@
                                                 <div class="task-project">${task.project.name}</div>
                                             </div>
                                             <div>
-                                                <span class="badge ${task.status == 'TODO' ? 'todo' : task.status == 'IN_PROGRESS' ? 'in-progress' : 'completed'}">
+                                                <span class="badge ${task.status == 'EN_COURS' ? 'in-progress' : task.status == 'VALIDEE' ? 'completed' : 'todo'}">
                                                     ${task.status}
                                                 </span>
                                             </div>

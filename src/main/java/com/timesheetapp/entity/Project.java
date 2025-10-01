@@ -19,9 +19,13 @@ public class Project {
     @NotBlank(message = "Project name is required")
     @Size(max = 100, message = "Project name cannot exceed 100 characters")
     private String name;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "client_name", length = 200)
+    @Size(max = 200, message = "Client name cannot exceed 200 characters")
+    private String clientName;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id", nullable = false)
@@ -46,7 +50,7 @@ public class Project {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProjectStatus status = ProjectStatus.PLANNING;
+    private ProjectStatus status = ProjectStatus.EN_ATTENTE;
     
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -72,9 +76,21 @@ public class Project {
     
     @OneToMany(mappedBy = "project", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
-    
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "project_employees",
+        joinColumns = @JoinColumn(name = "project_id"),
+        inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private List<User> assignedEmployees;
+
     public enum ProjectStatus {
-        PLANNING, ACTIVE, ON_HOLD, COMPLETED, CANCELLED
+        EN_ATTENTE,    // Waiting for validation
+        VALIDE,        // Validated, can have tasks
+        ACTIF,         // Active (same as VALIDE, kept for compatibility)
+        TERMINE,       // Completed
+        ABANDONNE      // Abandoned/Cancelled
     }
     
     @PrePersist
@@ -104,7 +120,10 @@ public class Project {
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    
+
+    public String getClientName() { return clientName; }
+    public void setClientName(String clientName) { this.clientName = clientName; }
+
     public User getManager() { return manager; }
     public void setManager(User manager) { this.manager = manager; }
     
@@ -146,7 +165,10 @@ public class Project {
     
     public List<Task> getTasks() { return tasks; }
     public void setTasks(List<Task> tasks) { this.tasks = tasks; }
-    
+
+    public List<User> getAssignedEmployees() { return assignedEmployees; }
+    public void setAssignedEmployees(List<User> assignedEmployees) { this.assignedEmployees = assignedEmployees; }
+
     public double getProgressPercentage() {
         if (estimatedHours == null || estimatedHours == 0) {
             return 0.0;
@@ -159,11 +181,15 @@ public class Project {
     }
     
     public boolean isActive() {
-        return status == ProjectStatus.ACTIVE;
+        return status == ProjectStatus.ACTIF || status == ProjectStatus.VALIDE;
     }
-    
+
     public boolean isCompleted() {
-        return status == ProjectStatus.COMPLETED;
+        return status == ProjectStatus.TERMINE;
+    }
+
+    public boolean isValidated() {
+        return Boolean.TRUE.equals(isValidated);
     }
     
     @Override

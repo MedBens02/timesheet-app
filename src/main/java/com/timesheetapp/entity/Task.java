@@ -43,17 +43,27 @@ public class Task {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TaskStatus status = TaskStatus.TODO;
-    
+    private TaskStatus status = TaskStatus.EN_COURS;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TaskPriority priority = TaskPriority.MEDIUM;
-    
+
     @Column(name = "due_date")
     private LocalDate dueDate;
-    
+
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "is_validated")
+    private Boolean isValidated = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "validated_by")
+    private User validatedBy;
+
+    @Column(name = "validated_at")
+    private LocalDateTime validatedAt;
     
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -65,9 +75,12 @@ public class Task {
     private List<TimesheetEntry> timesheetEntries;
     
     public enum TaskStatus {
-        TODO, IN_PROGRESS, COMPLETED, CANCELLED
+        EN_COURS,     // In Progress (default)
+        VALIDEE,      // Validated/Completed
+        REJETEE,      // Rejected
+        ANNULEE       // Cancelled
     }
-    
+
     public enum TaskPriority {
         LOW, MEDIUM, HIGH, URGENT
     }
@@ -81,7 +94,7 @@ public class Task {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        if (status == TaskStatus.COMPLETED && completedAt == null) {
+        if (status == TaskStatus.VALIDEE && completedAt == null) {
             completedAt = LocalDateTime.now();
         }
     }
@@ -133,27 +146,40 @@ public class Task {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    
+
+    public Boolean getIsValidated() { return isValidated; }
+    public void setIsValidated(Boolean isValidated) { this.isValidated = isValidated; }
+
+    public User getValidatedBy() { return validatedBy; }
+    public void setValidatedBy(User validatedBy) { this.validatedBy = validatedBy; }
+
+    public LocalDateTime getValidatedAt() { return validatedAt; }
+    public void setValidatedAt(LocalDateTime validatedAt) { this.validatedAt = validatedAt; }
+
     public List<TimesheetEntry> getTimesheetEntries() { return timesheetEntries; }
     public void setTimesheetEntries(List<TimesheetEntry> timesheetEntries) { this.timesheetEntries = timesheetEntries; }
     
     public double getProgressPercentage() {
         if (estimatedHours == null || estimatedHours == 0) {
-            return status == TaskStatus.COMPLETED ? 100.0 : 0.0;
+            return status == TaskStatus.VALIDEE ? 100.0 : 0.0;
         }
         return Math.min((actualHours.doubleValue() / estimatedHours) * 100.0, 100.0);
     }
-    
+
     public boolean isOverdue() {
-        return dueDate != null && dueDate.isBefore(LocalDate.now()) && status != TaskStatus.COMPLETED;
+        return dueDate != null && dueDate.isBefore(LocalDate.now()) && status != TaskStatus.VALIDEE;
     }
-    
+
     public boolean isCompleted() {
-        return status == TaskStatus.COMPLETED;
+        return status == TaskStatus.VALIDEE;
     }
-    
+
     public boolean isInProgress() {
-        return status == TaskStatus.IN_PROGRESS;
+        return status == TaskStatus.EN_COURS;
+    }
+
+    public boolean isValidated() {
+        return Boolean.TRUE.equals(isValidated);
     }
     
     public boolean isHighPriority() {

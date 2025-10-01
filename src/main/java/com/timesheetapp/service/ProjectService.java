@@ -28,6 +28,11 @@ public class ProjectService {
 
     // Project creation
 
+    // Overloaded method for servlet convenience
+    public Project createProject(Project project) {
+        return projectDAO.save(project);
+    }
+
     public Project createProject(String name, String description, User manager,
                                 Integer estimatedHours, BigDecimal estimatedCost,
                                 LocalDate startDate, LocalDate endDate) {
@@ -63,7 +68,7 @@ public class ProjectService {
         project.setEstimatedCost(estimatedCost != null ? estimatedCost : BigDecimal.ZERO);
         project.setStartDate(startDate);
         project.setEndDate(endDate);
-        project.setStatus(Project.ProjectStatus.PLANNING);
+        project.setStatus(Project.ProjectStatus.EN_ATTENTE);
         project.setIsValidated(false);
 
         return projectDAO.save(project);
@@ -80,8 +85,25 @@ public class ProjectService {
         return projectDAO.findById(id);
     }
 
+    // Alias methods for servlet convenience
+    public Optional<Project> findById(Long id) {
+        return projectDAO.findById(id);
+    }
+
     public List<Project> getAllProjects() {
         return projectDAO.findAll();
+    }
+
+    public List<Project> findAll() {
+        return projectDAO.findAll();
+    }
+
+    public List<Project> findByManager(User manager) {
+        return projectDAO.findByManager(manager);
+    }
+
+    public List<Project> findByStatus(Project.ProjectStatus status) {
+        return projectDAO.findByStatus(status);
     }
 
     public List<Project> getProjectsByManager(User manager) {
@@ -93,11 +115,11 @@ public class ProjectService {
     }
 
     public List<Project> getActiveProjects() {
-        return projectDAO.findByStatus(Project.ProjectStatus.ACTIVE);
+        return projectDAO.findByStatus(Project.ProjectStatus.ACTIF);
     }
 
     public List<Project> getCompletedProjects() {
-        return projectDAO.findByStatus(Project.ProjectStatus.COMPLETED);
+        return projectDAO.findByStatus(Project.ProjectStatus.TERMINE);
     }
 
     public List<Project> getValidatedProjects() {
@@ -191,7 +213,7 @@ public class ProjectService {
         }
 
         // Business rules for status transitions
-        if (project.getStatus() == Project.ProjectStatus.COMPLETED && newStatus != Project.ProjectStatus.COMPLETED) {
+        if (project.getStatus() == Project.ProjectStatus.TERMINE && newStatus != Project.ProjectStatus.TERMINE) {
             throw new IllegalStateException("Cannot change status of completed project");
         }
 
@@ -206,7 +228,7 @@ public class ProjectService {
             throw new IllegalStateException("Project must be validated before activation");
         }
 
-        project.setStatus(Project.ProjectStatus.ACTIVE);
+        project.setStatus(Project.ProjectStatus.ACTIF);
         return projectDAO.update(project);
     }
 
@@ -216,26 +238,26 @@ public class ProjectService {
         // Check if all tasks are completed
         List<Task> tasks = taskDAO.findByProject(project);
         long incompleteTasks = tasks.stream()
-            .filter(task -> task.getStatus() != Task.TaskStatus.COMPLETED && task.getStatus() != Task.TaskStatus.CANCELLED)
+            .filter(task -> task.getStatus() != Task.TaskStatus.VALIDEE && task.getStatus() != Task.TaskStatus.ANNULEE)
             .count();
 
         if (incompleteTasks > 0) {
             throw new IllegalStateException("Cannot complete project with incomplete tasks. " + incompleteTasks + " task(s) remaining.");
         }
 
-        project.setStatus(Project.ProjectStatus.COMPLETED);
+        project.setStatus(Project.ProjectStatus.TERMINE);
         return projectDAO.update(project);
     }
 
     public Project holdProject(Long projectId) {
         Project project = getProjectById(projectId);
-        project.setStatus(Project.ProjectStatus.ON_HOLD);
+        project.setStatus(Project.ProjectStatus.EN_ATTENTE);
         return projectDAO.update(project);
     }
 
     public Project cancelProject(Long projectId) {
         Project project = getProjectById(projectId);
-        project.setStatus(Project.ProjectStatus.CANCELLED);
+        project.setStatus(Project.ProjectStatus.ABANDONNE);
         return projectDAO.update(project);
     }
 
@@ -270,7 +292,7 @@ public class ProjectService {
             throw new IllegalStateException("Project is not validated");
         }
 
-        if (project.getStatus() == Project.ProjectStatus.ACTIVE || project.getStatus() == Project.ProjectStatus.COMPLETED) {
+        if (project.getStatus() == Project.ProjectStatus.ACTIF || project.getStatus() == Project.ProjectStatus.TERMINE) {
             throw new IllegalStateException("Cannot reject validation of active or completed project");
         }
 
@@ -359,7 +381,7 @@ public class ProjectService {
             throw new IllegalStateException("Cannot delete project with existing tasks. Delete or reassign tasks first.");
         }
 
-        if (project.getStatus() == Project.ProjectStatus.ACTIVE) {
+        if (project.getStatus() == Project.ProjectStatus.ACTIF) {
             throw new IllegalStateException("Cannot delete active project. Cancel or complete it first.");
         }
 

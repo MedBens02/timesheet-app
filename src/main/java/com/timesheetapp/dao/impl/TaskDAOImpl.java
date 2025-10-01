@@ -52,7 +52,7 @@ public class TaskDAOImpl extends BaseDAOImpl<Task, Long> implements TaskDAO {
         LocalDate today = LocalDate.now();
         return executeQuery(
             "SELECT t FROM Task t JOIN FETCH t.project JOIN FETCH t.assignedTo WHERE t.dueDate < ?1 AND t.status != ?2",
-            today, Task.TaskStatus.COMPLETED);
+            today, Task.TaskStatus.VALIDEE);
     }
 
     @Override
@@ -68,12 +68,12 @@ public class TaskDAOImpl extends BaseDAOImpl<Task, Long> implements TaskDAO {
     
     @Override
     public List<Task> findCompletedTasks() {
-        return findByStatus(Task.TaskStatus.COMPLETED);
+        return findByStatus(Task.TaskStatus.VALIDEE);
     }
     
     @Override
     public List<Task> findInProgressTasks() {
-        return findByStatus(Task.TaskStatus.IN_PROGRESS);
+        return findByStatus(Task.TaskStatus.EN_COURS);
     }
     
     @Override

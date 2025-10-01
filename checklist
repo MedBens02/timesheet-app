@@ -1,0 +1,127 @@
+Development Checklist & Flow for Timesheet Management System
+Current State
+✅ Authentication system (Admin, PM, Employee)
+✅ User dashboards
+Development Flow
+Phase 1: Project Management Module
+1.1 Project Creation & Validation (Sequence Diagram 1)
+Implement project creation workflow:
+- Create Project entity with fields: name, estimationHours, cost, status (En attente/Validé/Terminé/Abandonné), clientName
+- ProjectService with methods: createProject(), requestValidation(), calculateProgress()
+- ProjectServlet endpoints: /project/create, /project/request-validation
+- JSP pages: create-project.jsp, project-list.jsp
+- Implement PM can create project and request admin validation
+- Admin validates/rejects with notification back to PM
+1.2 Employee Assignment
+Add employee assignment to projects:
+- Update Project entity with employee list relationship
+- Create assignment methods: assignEmployees(), getAssignedEmployees()
+- ProjectServlet endpoint: /project/assign-employees
+- JSP: assign-employees.jsp with multi-select employee list
+- Notification system when employee is assigned
+1.3 Task Creation & Assignment (Sequence Diagram 2)
+Implement task management:
+- Create Task entity: name, estimatedHours, actualHours, status (En cours/Validée/Rejetée), project relationship
+- TaskService methods: createTask(), assignToEmployees(), getAssignedTasks()
+- TaskServlet endpoints: /task/create, /task/assign
+- JSP: create-task.jsp, task-list.jsp
+- Employee can view assigned tasks on dashboard
+- Implement notification when task assigned
+Phase 2: Timesheet Management
+2.1 Weekly Timesheet Entry (Sequence Diagram 3)
+Implement timesheet logging:
+- Create FeuilleTemps entity: date, hoursWorked, taskId, employeeId, dayWorked, status (Soumis/Validé/Rejeté)
+- TimesheetService: registerHours(), submitForValidation(), getWeeklyHours()
+- TimesheetServlet: /timesheet/register, /timesheet/submit
+- JSP: timesheet-entry.jsp with weekly calendar view
+- Employee enters hours per task per day
+- Status starts as "Soumis"
+2.2 PM Hour Validation (Sequence Diagram 3 continued)
+Implement PM validation workflow:
+- TimesheetService methods: validateHours(), rejectHours(), updateSalary()
+- TimesheetServlet: /timesheet/validate, /timesheet/reject
+- JSP: validate-timesheets.jsp showing pending submissions
+- On validation, update employee salary if applicable
+- Send notification to employee
+2.3 Modifications.txt Features
+Implement special timesheet rules:
+- Allow task completion even when all hours consumed
+- Weekly task distribution respecting employee workload
+- Add comment/justification field to FeuilleTemps
+- PM can add extra hours to task:
+  * If creates overload: apply 1.25x overtime pay
+  * Alternative: schedule extra hours next week (no overtime)
+- PM can exceed initial project estimations
+- PM can alert employee when task hours insufficient but not complete
+Phase 3: Project Closure & Reporting
+3.1 Project Closure (Sequence Diagram 4)
+Implement project closure:
+- ProjectService: closeProject(), generateFinalReport()
+- Calculate: planned vs actual hours, costs, budget overruns
+- ProjectServlet: /project/close
+- JSP: close-project.jsp with final summary
+- Admin makes report available
+- PM can consult project report
+3.2 Admin Dashboard & Reporting (Sequence Diagram 5)
+Implement admin supervision:
+- Create Rapport entity: type, period, content, generatedDate
+- ReportService: calculateIndicators(), generateGlobalReport()
+- Calculate: total hours, projects count, budget overruns, statistics
+- AdminServlet: /admin/dashboard, /admin/reports
+- JSP: admin-dashboard.jsp with KPIs
+- Export to PDF/Excel functionality
+Phase 4: Employee Features
+4.1 Employee Views
+Implement employee self-service:
+- View assigned projects and tasks
+- Timesheet history with calendar view
+- Calculated salary view based on validated hours
+- Add comments/justifications to timesheets
+4.2 Calendar Integration
+Add calendar functionality:
+- Weekly view showing which tasks worked each day
+- Monthly overview of hours
+- Visual indicators for validated/pending/rejected hours
+Phase 5: Optional Enhancements
+5.1 Communication System
+Add chat/comments on tasks (WebSocket):
+- Comment entity linked to tasks
+- Real-time messaging between PM and employees
+- Justification system for hour adjustments
+5.2 Weekly Workflow Automation
+Implement weekly cycle:
+- Start of week: PM distributes tasks respecting workload limits
+- During week: employees log hours
+- End of week: batch submission and validation workflow
+- Weekly workload calculation per employee
+Implementation Order for Claude Code
+Session 1: Database & Entities
+1. Update database schema with Project, Task, FeuilleTemps, Rapport tables
+2. Create/update JPA entities with relationships
+3. Test entity relationships and persistence
+Session 2: Project Module
+4. ProjectService and TaskService business logic
+5. Project and Task servlets
+6. JSP pages for project CRUD and task management
+Session 3: Timesheet Module
+7. TimesheetService with validation logic
+8. Implement overtime calculation (1.25x rule)
+9. Timesheet servlets and JSP pages
+10. Weekly calendar view
+Session 4: Reporting & Closure
+11. ReportService with calculation methods
+12. Project closure workflow
+13. Admin dashboard with KPIs
+14. PDF/Excel export
+Session 5: Polish & Optional Features
+15. Notification system improvements
+16. Comment/justification system
+17. WebSocket chat (if time permits)
+Key Rules to Implement
+
+PM can modify task hours triggering overtime pay
+Tasks can be marked complete without using all hours
+Weekly workload limits per employee
+Project estimations can be exceeded by PM
+Admin supervises all projects and hours
+Final reports compare planned vs actual

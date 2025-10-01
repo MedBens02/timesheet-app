@@ -105,6 +105,11 @@ public class UserService {
         return userDAO.findById(id);
     }
 
+    // Alias methods for servlet convenience
+    public Optional<User> findById(Long id) {
+        return userDAO.findById(id);
+    }
+
     public Optional<User> findUserByUsername(String username) {
         return userDAO.findByUsername(username);
     }
@@ -122,6 +127,10 @@ public class UserService {
     }
 
     public List<User> getUsersByRole(User.UserRole role) {
+        return userDAO.findByRole(role);
+    }
+
+    public List<User> findByRole(User.UserRole role) {
         return userDAO.findByRole(role);
     }
 

@@ -83,6 +83,18 @@
             </div>
         </div>
 
+        <!-- Quick Actions -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 1rem; color: #333;">Quick Actions</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="${pageContext.request.contextPath}/project/list" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📁 Manage Projects</a>
+                <a href="${pageContext.request.contextPath}/project/list?status=EN_ATTENTE" style="padding: 10px 20px; background: #ffc107; color: #333; border-radius: 6px; text-decoration: none; font-weight: 500;">⏳ Validate Projects</a>
+                <a href="#" style="padding: 10px 20px; background: #28a745; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">👥 Manage Users</a>
+                <a href="#" style="padding: 10px 20px; background: #17a2b8; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📊 View Reports</a>
+                <a href="${pageContext.request.contextPath}/logout" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">🚪 Logout</a>
+            </div>
+        </div>
+
         <h3 style="margin-bottom: 1rem; color: #333;">User Statistics</h3>
         <div class="stats-grid" style="margin-bottom: 2rem;">
             <div class="stat-card primary">
@@ -115,7 +127,7 @@
                                             <div class="item-name">${project.name}</div>
                                             <div class="item-info">Manager: ${project.manager.fullName}</div>
                                         </div>
-                                        <span class="badge ${project.status == 'ACTIVE' ? 'active' : project.status == 'COMPLETED' ? 'completed' : 'pending'}">
+                                        <span class="badge ${project.status == 'ACTIF' ? 'active' : project.status == 'TERMINE' ? 'completed' : 'pending'}">
                                             ${project.status}
                                         </span>
                                     </div>

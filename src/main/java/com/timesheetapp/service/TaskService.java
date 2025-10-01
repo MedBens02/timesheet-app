@@ -58,7 +58,7 @@ public class TaskService {
         task.setEstimatedHours(estimatedHours != null ? estimatedHours : 0);
         task.setPriority(priority != null ? priority : Task.TaskPriority.MEDIUM);
         task.setDueDate(dueDate);
-        task.setStatus(Task.TaskStatus.TODO);
+        task.setStatus(Task.TaskStatus.EN_COURS);
 
         return taskDAO.save(task);
     }
@@ -115,15 +115,15 @@ public class TaskService {
     }
 
     public List<Task> getCompletedTasks() {
-        return taskDAO.findByStatus(Task.TaskStatus.COMPLETED);
+        return taskDAO.findByStatus(Task.TaskStatus.VALIDEE);
     }
 
     public List<Task> getInProgressTasks() {
-        return taskDAO.findByStatus(Task.TaskStatus.IN_PROGRESS);
+        return taskDAO.findByStatus(Task.TaskStatus.EN_COURS);
     }
 
     public List<Task> getTodoTasks() {
-        return taskDAO.findByStatus(Task.TaskStatus.TODO);
+        return taskDAO.findByStatus(Task.TaskStatus.EN_COURS);
     }
 
     // Task updates
@@ -184,13 +184,13 @@ public class TaskService {
         }
 
         // Business rules for status transitions
-        if (task.getStatus() == Task.TaskStatus.COMPLETED && newStatus != Task.TaskStatus.COMPLETED) {
+        if (task.getStatus() == Task.TaskStatus.VALIDEE && newStatus != Task.TaskStatus.VALIDEE) {
             throw new IllegalStateException("Cannot change status of completed task");
         }
 
         task.setStatus(newStatus);
 
-        if (newStatus == Task.TaskStatus.COMPLETED) {
+        if (newStatus == Task.TaskStatus.VALIDEE) {
             task.setCompletedAt(LocalDateTime.now());
         }
 
@@ -200,30 +200,30 @@ public class TaskService {
     public Task startTask(Long taskId) {
         Task task = getTaskById(taskId);
 
-        if (task.getStatus() == Task.TaskStatus.COMPLETED) {
+        if (task.getStatus() == Task.TaskStatus.VALIDEE) {
             throw new IllegalStateException("Cannot start a completed task");
         }
 
-        if (task.getStatus() == Task.TaskStatus.CANCELLED) {
+        if (task.getStatus() == Task.TaskStatus.ANNULEE) {
             throw new IllegalStateException("Cannot start a cancelled task");
         }
 
-        task.setStatus(Task.TaskStatus.IN_PROGRESS);
+        task.setStatus(Task.TaskStatus.EN_COURS);
         return taskDAO.update(task);
     }
 
     public Task completeTask(Long taskId) {
         Task task = getTaskById(taskId);
 
-        if (task.getStatus() == Task.TaskStatus.COMPLETED) {
+        if (task.getStatus() == Task.TaskStatus.VALIDEE) {
             throw new IllegalStateException("Task is already completed");
         }
 
-        if (task.getStatus() == Task.TaskStatus.CANCELLED) {
+        if (task.getStatus() == Task.TaskStatus.ANNULEE) {
             throw new IllegalStateException("Cannot complete a cancelled task");
         }
 
-        task.setStatus(Task.TaskStatus.COMPLETED);
+        task.setStatus(Task.TaskStatus.VALIDEE);
         task.setCompletedAt(LocalDateTime.now());
 
         return taskDAO.update(task);
@@ -232,11 +232,11 @@ public class TaskService {
     public Task cancelTask(Long taskId) {
         Task task = getTaskById(taskId);
 
-        if (task.getStatus() == Task.TaskStatus.COMPLETED) {
+        if (task.getStatus() == Task.TaskStatus.VALIDEE) {
             throw new IllegalStateException("Cannot cancel a completed task");
         }
 
-        task.setStatus(Task.TaskStatus.CANCELLED);
+        task.setStatus(Task.TaskStatus.ANNULEE);
         return taskDAO.update(task);
     }
 
@@ -249,7 +249,7 @@ public class TaskService {
             throw new IllegalArgumentException("Assignee is required");
         }
 
-        if (task.getStatus() == Task.TaskStatus.COMPLETED) {
+        if (task.getStatus() == Task.TaskStatus.VALIDEE) {
             throw new IllegalStateException("Cannot reassign completed task");
         }
 
@@ -303,7 +303,7 @@ public class TaskService {
             throw new IllegalStateException("Cannot delete task with timesheet entries. Complete or cancel the task instead.");
         }
 
-        if (task.getStatus() == Task.TaskStatus.IN_PROGRESS) {
+        if (task.getStatus() == Task.TaskStatus.EN_COURS) {
             throw new IllegalStateException("Cannot delete task in progress. Cancel or complete it first.");
         }
 
@@ -323,8 +323,8 @@ public class TaskService {
 
         // Return tasks assigned to the user that are not completed or cancelled
         return taskDAO.findByAssignedUser(user).stream()
-            .filter(task -> task.getStatus() != Task.TaskStatus.COMPLETED
-                         && task.getStatus() != Task.TaskStatus.CANCELLED)
+            .filter(task -> task.getStatus() != Task.TaskStatus.VALIDEE
+                         && task.getStatus() != Task.TaskStatus.ANNULEE)
             .toList();
     }
 
@@ -343,7 +343,7 @@ public class TaskService {
             .filter(task -> task.getDueDate() != null
                          && !task.getDueDate().isBefore(LocalDate.now())
                          && !task.getDueDate().isAfter(futureDate)
-                         && task.getStatus() != Task.TaskStatus.COMPLETED)
+                         && task.getStatus() != Task.TaskStatus.VALIDEE)
             .toList();
     }
 
