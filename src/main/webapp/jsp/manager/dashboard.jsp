@@ -3,190 +3,307 @@
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manager Dashboard - Timesheet System</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
-        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .navbar h1 { font-size: 1.5rem; }
-        .navbar .user-info { display: flex; align-items: center; gap: 1rem; }
-        .navbar .logout-btn { background: rgba(255,255,255,0.2); color: white; padding: 0.5rem 1rem; text-decoration: none; border-radius: 5px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .welcome-section { background: white; padding: 2rem; border-radius: 10px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid; }
-        .stat-card.primary { border-left-color: #667eea; }
-        .stat-card.success { border-left-color: #4caf50; }
-        .stat-card.warning { border-left-color: #ff9800; }
-        .stat-card.danger { border-left-color: #f44336; }
-        .stat-card.info { border-left-color: #2196f3; }
-        .stat-card h3 { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .stat-card .value { font-size: 2rem; font-weight: bold; color: #333; }
-        .content-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
-        .card { background: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
-        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 1.5rem; font-weight: 600; }
-        .card-body { padding: 1.5rem; max-height: 400px; overflow-y: auto; }
-        .list-item { padding: 1rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
-        .list-item:last-child { border-bottom: none; }
-        .item-name { font-weight: 500; color: #333; }
-        .item-info { font-size: 0.85rem; color: #666; }
-        .badge { padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-        .badge.active { background: #e8f5e9; color: #388e3c; }
-        .badge.completed { background: #e3f2fd; color: #1976d2; }
-        .badge.overdue { background: #ffebee; color: #c62828; }
-        .badge.high { background: #ffebee; color: #c62828; }
-        .badge.pending { background: #fff3e0; color: #f57c00; }
-        .empty-state { text-align: center; padding: 2rem; color: #999; }
-    </style>
+    <jsp:include page="../includes/head.jsp" />
 </head>
-<body>
-    <nav class="navbar">
-        <h1>Timesheet System - Manager Dashboard</h1>
-        <div class="user-info">
-            <span>Welcome, ${sessionScope.currentUser.firstName} ${sessionScope.currentUser.lastName}</span>
-            <a href="${pageContext.request.contextPath}/logout" class="logout-btn">Logout</a>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="welcome-section">
-            <h2>Manager Dashboard</h2>
-            <p>Manage your projects, teams, and approve timesheets</p>
-        </div>
+<body id="page-top">
 
-        <div class="stats-grid">
-            <div class="stat-card primary">
-                <h3>Total Projects</h3>
-                <div class="value">${totalProjects}</div>
-            </div>
-            <div class="stat-card success">
-                <h3>Active Projects</h3>
-                <div class="value">${activeProjectCount}</div>
-            </div>
-            <div class="stat-card warning">
-                <h3>Total Tasks</h3>
-                <div class="value">${totalTasks}</div>
-            </div>
-            <div class="stat-card danger">
-                <h3>Overdue Tasks</h3>
-                <div class="value">${overdueTaskCount}</div>
-            </div>
-            <div class="stat-card info">
-                <h3>Pending Validations</h3>
-                <div class="value">${pendingValidations}</div>
-            </div>
-        </div>
+    <!-- Page Wrapper -->
+    <div id="wrapper">
 
-        <!-- Quick Actions -->
-        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="margin-bottom: 1rem; color: #333;">Quick Actions</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="${pageContext.request.contextPath}/project/create" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">+ Create Project</a>
-                <a href="${pageContext.request.contextPath}/project/list" style="padding: 10px 20px; background: #17a2b8; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📁 My Projects</a>
-                <a href="#" style="padding: 10px 20px; background: #28a745; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">📋 Manage Tasks</a>
-                <a href="#" style="padding: 10px 20px; background: #ffc107; color: #333; border-radius: 6px; text-decoration: none; font-weight: 500;">✓ Validate Timesheets</a>
-                <a href="${pageContext.request.contextPath}/logout" style="padding: 10px 20px; background: #6c757d; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">🚪 Logout</a>
-            </div>
-        </div>
+        <jsp:include page="../includes/sidebar.jsp" />
 
-        <div class="content-grid">
-            <div class="card">
-                <div class="card-header">My Projects</div>
-                <div class="card-body">
-                    <c:choose>
-                        <c:when test="${empty myProjects}">
-                            <div class="empty-state">No projects assigned</div>
-                        </c:when>
-                        <c:otherwise>
-                            <c:forEach items="${myProjects}" var="project">
-                                <div class="list-item">
-                                    <div>
-                                        <div class="item-name">${project.name}</div>
-                                        <div class="item-info">${project.estimatedHours} estimated hours</div>
-                                    </div>
-                                    <span class="badge ${project.status == 'ACTIF' ? 'active' : project.status == 'TERMINE' ? 'completed' : 'pending'}">
-                                        ${project.status}
-                                    </span>
-                                </div>
-                            </c:forEach>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
 
-            <div class="card">
-                <div class="card-header">Overdue Tasks</div>
-                <div class="card-body">
-                    <c:choose>
-                        <c:when test="${empty overdueTasks}">
-                            <div class="empty-state">No overdue tasks</div>
-                        </c:when>
-                        <c:otherwise>
-                            <c:forEach items="${overdueTasks}" var="task">
-                                <div class="list-item">
-                                    <div>
-                                        <div class="item-name">${task.name}</div>
-                                        <div class="item-info">${task.project.name} - Assigned to: ${task.assignedTo.fullName}</div>
-                                    </div>
-                                    <span class="badge overdue">OVERDUE</span>
-                                </div>
-                            </c:forEach>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
+            <!-- Main Content -->
+            <div id="content">
 
-            <div class="card">
-                <div class="card-header">High Priority Tasks</div>
-                <div class="card-body">
-                    <c:choose>
-                        <c:when test="${empty highPriorityTasks}">
-                            <div class="empty-state">No high priority tasks</div>
-                        </c:when>
-                        <c:otherwise>
-                            <c:forEach items="${highPriorityTasks}" var="task">
-                                <div class="list-item">
-                                    <div>
-                                        <div class="item-name">${task.name}</div>
-                                        <div class="item-info">${task.project.name}</div>
-                                    </div>
-                                    <span class="badge high">${task.priority}</span>
-                                </div>
-                            </c:forEach>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-            </div>
+                <jsp:include page="../includes/topbar.jsp" />
 
-            <div class="card">
-                <div class="card-header">Timesheets Awaiting Validation</div>
-                <div class="card-body">
-                    <c:choose>
-                        <c:when test="${empty timesheetsForValidation}">
-                            <div class="empty-state">No pending timesheets</div>
-                        </c:when>
-                        <c:otherwise>
-                            <c:forEach items="${timesheetsForValidation}" var="timesheet">
-                                <div class="list-item">
-                                    <div>
-                                        <div class="item-name">${timesheet.user.fullName}</div>
-                                        <div class="item-info">
-                                            <fmt:formatDate value="${timesheet.weekStartDate}" pattern="MMM dd"/> -
-                                            <fmt:formatDate value="${timesheet.weekEndDate}" pattern="MMM dd, yyyy"/>
-                                            (${timesheet.totalHours}h)
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Manager Dashboard</h1>
+                        <a href="${pageContext.request.contextPath}/project/create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                            <i class="fas fa-plus fa-sm text-white-50"></i> Create Project
+                        </a>
+                    </div>
+
+                    <!-- Content Row -->
+                    <div class="row">
+
+                        <!-- Total Projects Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Projects</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${totalProjects}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-folder fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
-                                    <span class="badge pending">PENDING</span>
                                 </div>
-                            </c:forEach>
-                        </c:otherwise>
-                    </c:choose>
+                            </div>
+                        </div>
+
+                        <!-- Active Projects Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Active Projects</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${activeProjectCount}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Tasks Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Tasks
+                                            </div>
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">${totalTasks}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Overdue Tasks Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Overdue Tasks</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${overdueTaskCount}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Row -->
+                    <div class="row">
+                        <!-- Pending Validations Card -->
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card border-left-danger shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Pending Validations</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${pendingValidations}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Row -->
+                    <div class="row">
+
+                        <!-- My Projects Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">My Projects</h6>
+                                    <a href="${pageContext.request.contextPath}/project/list" class="btn btn-sm btn-primary">View All</a>
+                                </div>
+                                <div class="card-body">
+                                    <c:choose>
+                                        <c:when test="${empty myProjects}">
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-folder-open fa-3x mb-3"></i>
+                                                <p>No projects assigned</p>
+                                                <a href="${pageContext.request.contextPath}/project/create" class="btn btn-sm btn-primary">Create Your First Project</a>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach items="${myProjects}" var="project" varStatus="status">
+                                                <c:if test="${status.index < 5}">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 ${status.last ? '' : 'border-bottom'}">
+                                                        <div>
+                                                            <div class="font-weight-bold text-gray-800">${project.name}</div>
+                                                            <small class="text-gray-600">${project.estimatedHours} estimated hours</small>
+                                                        </div>
+                                                        <span class="badge badge-${project.status == 'ACTIF' ? 'success' : project.status == 'TERMINE' ? 'primary' : 'warning'} badge-pill">
+                                                            ${project.status}
+                                                        </span>
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Overdue Tasks Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Overdue Tasks</h6>
+                                </div>
+                                <div class="card-body">
+                                    <c:choose>
+                                        <c:when test="${empty overdueTasks}">
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                                                <p>No overdue tasks</p>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach items="${overdueTasks}" var="task" varStatus="status">
+                                                <c:if test="${status.index < 5}">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 ${status.last ? '' : 'border-bottom'}">
+                                                        <div>
+                                                            <div class="font-weight-bold text-gray-800">${task.name}</div>
+                                                            <small class="text-gray-600">${task.project.name} - ${task.assignedTo.fullName}</small>
+                                                        </div>
+                                                        <span class="badge badge-danger badge-pill">OVERDUE</span>
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Content Row -->
+                    <div class="row">
+
+                        <!-- High Priority Tasks Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">High Priority Tasks</h6>
+                                </div>
+                                <div class="card-body">
+                                    <c:choose>
+                                        <c:when test="${empty highPriorityTasks}">
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-thumbs-up fa-3x mb-3 text-info"></i>
+                                                <p>No high priority tasks</p>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach items="${highPriorityTasks}" var="task" varStatus="status">
+                                                <c:if test="${status.index < 5}">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 ${status.last ? '' : 'border-bottom'}">
+                                                        <div>
+                                                            <div class="font-weight-bold text-gray-800">${task.name}</div>
+                                                            <small class="text-gray-600">${task.project.name}</small>
+                                                        </div>
+                                                        <span class="badge badge-danger badge-pill">${task.priority}</span>
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timesheets Awaiting Validation Card -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Timesheets Awaiting Validation</h6>
+                                </div>
+                                <div class="card-body">
+                                    <c:choose>
+                                        <c:when test="${empty timesheetsForValidation}">
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-clipboard-check fa-3x mb-3 text-success"></i>
+                                                <p>No pending timesheets</p>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach items="${timesheetsForValidation}" var="timesheet" varStatus="status">
+                                                <c:if test="${status.index < 5}">
+                                                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 ${status.last ? '' : 'border-bottom'}">
+                                                        <div>
+                                                            <div class="font-weight-bold text-gray-800">${timesheet.user.fullName}</div>
+                                                            <small class="text-gray-600">
+                                                                ${timesheet.weekStartDate} - ${timesheet.weekEndDate}
+                                                                (${timesheet.totalHours}h)
+                                                            </small>
+                                                        </div>
+                                                        <span class="badge badge-warning badge-pill">PENDING</span>
+                                                    </div>
+                                                </c:if>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
+                <!-- /.container-fluid -->
+
             </div>
+            <!-- End of Main Content -->
+
+            <jsp:include page="../includes/footer.jsp" />
+
         </div>
+        <!-- End of Content Wrapper -->
+
     </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <jsp:include page="../includes/logout-modal.jsp" />
+
+    <jsp:include page="../includes/scripts.jsp" />
+
 </body>
+
 </html>

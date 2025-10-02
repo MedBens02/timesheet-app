@@ -1,471 +1,268 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.timesheetapp.entity.Project" %>
-<%@ page import="com.timesheetapp.entity.User" %>
-<%@ page import="com.timesheetapp.entity.Project.ProjectStatus" %>
-<%@ page import="java.util.List" %>
-<%
-    User currentUser = (User) request.getAttribute("currentUser");
-    List<Project> projects = (List<Project>) request.getAttribute("projects");
-    String statusFilter = (String) request.getAttribute("statusFilter");
-    String successMessage = (String) session.getAttribute("successMessage");
-    String errorMessage = (String) session.getAttribute("errorMessage");
-    session.removeAttribute("successMessage");
-    session.removeAttribute("errorMessage");
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects - Timesheet Management</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <jsp:include page="../includes/head.jsp" />
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .header .user-info {
-            text-align: right;
-        }
-
-        .header .role-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .action-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .filters {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .filters select {
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .message {
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .projects-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .projects-table thead {
-            background: #f8f9fa;
-        }
-
-        .projects-table th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .projects-table td {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: top;
-        }
-
-        .projects-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-en-attente {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-valide {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-actif {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .status-termine {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .status-abandonne {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .project-info {
-            margin-bottom: 5px;
-        }
-
-        .project-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 16px;
-        }
-
-        .project-client {
-            color: #666;
-            font-size: 13px;
-            margin-top: 3px;
-        }
-
-        .project-manager {
-            color: #666;
-            font-size: 13px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 5px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 3px;
-        }
-
-        .actions {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-
-        .no-projects {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-
-        .no-projects-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            opacity: 0.3;
-        }
-
-        .nav-links {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            gap: 15px;
-        }
-    </style>
+    <!-- Custom styles for DataTables -->
+    <link href="${pageContext.request.contextPath}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>Project Management</h1>
-                <p>Manage and track all projects</p>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <jsp:include page="../includes/sidebar.jsp" />
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <jsp:include page="../includes/topbar.jsp" />
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Project Management</h1>
+                        <c:if test="${sessionScope.currentUser.role.toString() == 'ADMIN' || sessionScope.currentUser.role == 'PROJECT_MANAGER'}">
+                            <a href="${pageContext.request.contextPath}/project/create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                                <i class="fas fa-plus fa-sm text-white-50"></i> Create New Project
+                            </a>
+                        </c:if>
+                    </div>
+
+                    <!-- Success/Error Messages -->
+                    <c:if test="${not empty sessionScope.successMessage}">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> ${sessionScope.successMessage}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <c:remove var="successMessage" scope="session"/>
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.errorMessage}">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> ${sessionScope.errorMessage}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <c:remove var="errorMessage" scope="session"/>
+                    </c:if>
+
+                    <!-- Filter Section -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Filter Projects</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" action="${pageContext.request.contextPath}/project/list" class="form-inline">
+                                <label class="mr-2">Status:</label>
+                                <select name="status" class="form-control form-control-sm mr-3" onchange="this.form.submit()">
+                                    <option value="">All Statuses</option>
+                                    <option value="EN_ATTENTE" ${param.status == 'EN_ATTENTE' ? 'selected' : ''}>En attente</option>
+                                    <option value="VALIDE" ${param.status == 'VALIDE' ? 'selected' : ''}>Validé</option>
+                                    <option value="ACTIF" ${param.status == 'ACTIF' ? 'selected' : ''}>Actif</option>
+                                    <option value="TERMINE" ${param.status == 'TERMINE' ? 'selected' : ''}>Terminé</option>
+                                    <option value="ABANDONNE" ${param.status == 'ABANDONNE' ? 'selected' : ''}>Abandonné</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- DataTales Example -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">All Projects</h6>
+                        </div>
+                        <div class="card-body">
+                            <c:choose>
+                                <c:when test="${empty projects}">
+                                    <div class="text-center text-gray-500 py-5">
+                                        <i class="fas fa-folder-open fa-4x mb-3"></i>
+                                        <p class="h5">No Projects Found</p>
+                                        <c:choose>
+                                            <c:when test="${sessionScope.currentUser.role.toString() == 'PROJECT_MANAGER'}">
+                                                <p>Start by creating your first project!</p>
+                                                <a href="${pageContext.request.contextPath}/project/create" class="btn btn-primary mt-3">
+                                                    <i class="fas fa-plus"></i> Create Project
+                                                </a>
+                                            </c:when>
+                                            <c:when test="${sessionScope.currentUser.role.toString() == 'ADMIN'}">
+                                                <p>No projects have been created yet.</p>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <p>You haven't been assigned to any projects yet.</p>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Project</th>
+                                                    <th>Manager</th>
+                                                    <th>Status</th>
+                                                    <th>Progress</th>
+                                                    <th>Hours</th>
+                                                    <th>Dates</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach items="${projects}" var="project">
+                                                    <tr>
+                                                        <td>
+                                                            <div class="font-weight-bold">${project.name}</div>
+                                                            <c:if test="${not empty project.clientName}">
+                                                                <small class="text-gray-600">Client: ${project.clientName}</small>
+                                                            </c:if>
+                                                        </td>
+                                                        <td>${project.manager.fullName}</td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${project.status == 'EN_ATTENTE'}">
+                                                                    <span class="badge badge-warning">En attente</span>
+                                                                </c:when>
+                                                                <c:when test="${project.status == 'VALIDE'}">
+                                                                    <span class="badge badge-success">Validé</span>
+                                                                </c:when>
+                                                                <c:when test="${project.status == 'ACTIF'}">
+                                                                    <span class="badge badge-info">Actif</span>
+                                                                </c:when>
+                                                                <c:when test="${project.status == 'TERMINE'}">
+                                                                    <span class="badge badge-secondary">Terminé</span>
+                                                                </c:when>
+                                                                <c:when test="${project.status == 'ABANDONNE'}">
+                                                                    <span class="badge badge-danger">Abandonné</span>
+                                                                </c:when>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td>
+                                                            <div class="progress" style="height: 20px;">
+                                                                <div class="progress-bar ${project.progressPercentage >= 100 ? 'bg-success' : project.progressPercentage >= 75 ? 'bg-info' : project.progressPercentage >= 50 ? 'bg-warning' : 'bg-danger'}"
+                                                                     role="progressbar"
+                                                                     style="width: ${project.progressPercentage}%">
+                                                                    <fmt:formatNumber value="${project.progressPercentage}" pattern="0.0"/>%
+                                                                </div>
+                                                            </div>
+                                                            <small class="text-gray-600">${project.actualHours}h / ${project.estimatedHours}h</small>
+                                                        </td>
+                                                        <td>${project.estimatedHours}h</td>
+                                                        <td>
+                                                            <c:if test="${not empty project.startDate}">
+                                                                ${project.startDate}<br>
+                                                            </c:if>
+                                                            <c:if test="${not empty project.endDate}">
+                                                                to ${project.endDate}
+                                                            </c:if>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                                <c:if test="${sessionScope.currentUser.role.toString() == 'ADMIN' || (sessionScope.currentUser.role == 'PROJECT_MANAGER' && project.manager.id == sessionScope.currentUser.id)}">
+                                                                    <a href="${pageContext.request.contextPath}/project/edit?id=${project.id}" class="btn btn-secondary btn-sm mb-1">
+                                                                        <i class="fas fa-edit"></i> Edit
+                                                                    </a>
+
+                                                                    <c:if test="${project.status == 'EN_ATTENTE' && sessionScope.currentUser.role == 'PROJECT_MANAGER'}">
+                                                                        <a href="${pageContext.request.contextPath}/project/request-validation?id=${project.id}" class="btn btn-warning btn-sm mb-1">
+                                                                            <i class="fas fa-paper-plane"></i> Request Validation
+                                                                        </a>
+                                                                    </c:if>
+
+                                                                    <c:if test="${project.status == 'VALIDE' || project.status == 'ACTIF'}">
+                                                                        <a href="${pageContext.request.contextPath}/project/assign-employees?id=${project.id}" class="btn btn-success btn-sm mb-1">
+                                                                            <i class="fas fa-users"></i> Assign Employees
+                                                                        </a>
+                                                                    </c:if>
+
+                                                                    <a href="${pageContext.request.contextPath}/project/delete?id=${project.id}"
+                                                                       class="btn btn-danger btn-sm mb-1"
+                                                                       onclick="return confirm('Are you sure you want to delete this project?')">
+                                                                        <i class="fas fa-trash"></i> Delete
+                                                                    </a>
+                                                                </c:if>
+
+                                                                <c:if test="${sessionScope.currentUser.role.toString() == 'ADMIN' && project.status == 'EN_ATTENTE'}">
+                                                                    <a href="${pageContext.request.contextPath}/project/validate?id=${project.id}" class="btn btn-success btn-sm mb-1">
+                                                                        <i class="fas fa-check"></i> Validate
+                                                                    </a>
+                                                                    <a href="${pageContext.request.contextPath}/project/reject?id=${project.id}"
+                                                                       class="btn btn-danger btn-sm mb-1"
+                                                                       onclick="return confirm('Are you sure you want to reject this project?')">
+                                                                        <i class="fas fa-times"></i> Reject
+                                                                    </a>
+                                                                </c:if>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
             </div>
-            <div class="user-info">
-                <div><%= currentUser.getFullName() %></div>
-                <div class="role-badge"><%= currentUser.getRole() %></div>
-            </div>
+            <!-- End of Main Content -->
+
+            <jsp:include page="../includes/footer.jsp" />
+
         </div>
+        <!-- End of Content Wrapper -->
 
-        <div class="content">
-            <% if (successMessage != null) { %>
-                <div class="message success">
-                    ✓ <%= successMessage %>
-                </div>
-            <% } %>
-
-            <% if (errorMessage != null) { %>
-                <div class="message error">
-                    ✗ <%= errorMessage %>
-                </div>
-            <% } %>
-
-            <div class="action-bar">
-                <div class="filters">
-                    <label for="statusFilter">Filter by status:</label>
-                    <select id="statusFilter" onchange="filterProjects()">
-                        <option value="">All Statuses</option>
-                        <option value="EN_ATTENTE" <%= "EN_ATTENTE".equals(statusFilter) ? "selected" : "" %>>En attente</option>
-                        <option value="VALIDE" <%= "VALIDE".equals(statusFilter) ? "selected" : "" %>>Validé</option>
-                        <option value="ACTIF" <%= "ACTIF".equals(statusFilter) ? "selected" : "" %>>Actif</option>
-                        <option value="TERMINE" <%= "TERMINE".equals(statusFilter) ? "selected" : "" %>>Terminé</option>
-                        <option value="ABANDONNE" <%= "ABANDONNE".equals(statusFilter) ? "selected" : "" %>>Abandonné</option>
-                    </select>
-                </div>
-
-                <% if (currentUser.getRole() == User.UserRole.ADMIN || currentUser.getRole() == User.UserRole.PROJECT_MANAGER) { %>
-                    <a href="<%= request.getContextPath() %>/project/create" class="btn btn-primary">
-                        + Create New Project
-                    </a>
-                <% } %>
-            </div>
-
-            <% if (projects == null || projects.isEmpty()) { %>
-                <div class="no-projects">
-                    <div class="no-projects-icon">📁</div>
-                    <h3>No Projects Found</h3>
-                    <p>
-                        <% if (currentUser.getRole() == User.UserRole.PROJECT_MANAGER) { %>
-                            Start by creating your first project!
-                        <% } else if (currentUser.getRole() == User.UserRole.ADMIN) { %>
-                            No projects have been created yet.
-                        <% } else { %>
-                            You haven't been assigned to any projects yet.
-                        <% } %>
-                    </p>
-                </div>
-            <% } else { %>
-                <table class="projects-table">
-                    <thead>
-                        <tr>
-                            <th>Project</th>
-                            <th>Manager</th>
-                            <th>Status</th>
-                            <th>Progress</th>
-                            <th>Estimated Hours</th>
-                            <th>Dates</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% for (Project project : projects) { %>
-                            <tr>
-                                <td>
-                                    <div class="project-info">
-                                        <div class="project-name"><%= project.getName() %></div>
-                                        <% if (project.getClientName() != null && !project.getClientName().isEmpty()) { %>
-                                            <div class="project-client">Client: <%= project.getClientName() %></div>
-                                        <% } %>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="project-manager"><%= project.getManager().getFullName() %></div>
-                                </td>
-                                <td>
-                                    <span class="status-badge status-<%= project.getStatus().toString().toLowerCase().replace("_", "-") %>">
-                                        <%= project.getStatus().toString().replace("_", " ") %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: <%= project.getProgressPercentage() %>%"></div>
-                                    </div>
-                                    <div class="progress-text">
-                                        <%= String.format("%.1f", project.getProgressPercentage()) %>%
-                                        (<%= project.getActualHours() %>h / <%= project.getEstimatedHours() %>h)
-                                    </div>
-                                </td>
-                                <td><%= project.getEstimatedHours() %> hours</td>
-                                <td>
-                                    <% if (project.getStartDate() != null) { %>
-                                        <%= project.getStartDate() %><br>
-                                    <% } %>
-                                    <% if (project.getEndDate() != null) { %>
-                                        to <%= project.getEndDate() %>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <div class="actions">
-                                        <% if (currentUser.getRole() == User.UserRole.ADMIN ||
-                                               (currentUser.getRole() == User.UserRole.PROJECT_MANAGER &&
-                                                project.getManager().getId().equals(currentUser.getId()))) { %>
-
-                                            <a href="<%= request.getContextPath() %>/project/edit?id=<%= project.getId() %>"
-                                               class="btn btn-secondary btn-sm">Edit</a>
-
-                                            <% if (project.getStatus() == ProjectStatus.EN_ATTENTE &&
-                                                   currentUser.getRole() == User.UserRole.PROJECT_MANAGER) { %>
-                                                <a href="<%= request.getContextPath() %>/project/request-validation?id=<%= project.getId() %>"
-                                                   class="btn btn-warning btn-sm">Request Validation</a>
-                                            <% } %>
-
-                                            <% if (project.getStatus() == ProjectStatus.VALIDE ||
-                                                   project.getStatus() == ProjectStatus.ACTIF) { %>
-                                                <a href="<%= request.getContextPath() %>/project/assign-employees?id=<%= project.getId() %>"
-                                                   class="btn btn-success btn-sm">Assign Employees</a>
-                                            <% } %>
-
-                                            <a href="<%= request.getContextPath() %>/project/delete?id=<%= project.getId() %>"
-                                               class="btn btn-danger btn-sm"
-                                               onclick="return confirm('Are you sure you want to delete this project?')">Delete</a>
-                                        <% } %>
-
-                                        <% if (currentUser.getRole() == User.UserRole.ADMIN &&
-                                               project.getStatus() == ProjectStatus.EN_ATTENTE) { %>
-                                            <a href="<%= request.getContextPath() %>/project/validate?id=<%= project.getId() %>"
-                                               class="btn btn-success btn-sm">Validate</a>
-                                            <a href="<%= request.getContextPath() %>/project/reject?id=<%= project.getId() %>"
-                                               class="btn btn-danger btn-sm"
-                                               onclick="return confirm('Are you sure you want to reject this project?')">Reject</a>
-                                        <% } %>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            <% } %>
-
-            <div class="nav-links">
-                <a href="<%= request.getContextPath() %>/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
-            </div>
-        </div>
     </div>
+    <!-- End of Page Wrapper -->
 
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <jsp:include page="../includes/logout-modal.jsp" />
+
+    <jsp:include page="../includes/scripts.jsp" />
+
+    <!-- Page level plugins -->
+    <script src="${pageContext.request.contextPath}/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="${pageContext.request.contextPath}/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- DataTables initialization -->
     <script>
-        function filterProjects() {
-            const status = document.getElementById('statusFilter').value;
-            const url = new URL(window.location.href);
-            if (status) {
-                url.searchParams.set('status', status);
-            } else {
-                url.searchParams.delete('status');
-            }
-            window.location.href = url.toString();
-        }
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                "order": [[ 0, "asc" ]],
+                "pageLength": 10,
+                "language": {
+                    "search": "Search projects:",
+                    "lengthMenu": "Show _MENU_ projects per page",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ projects",
+                    "infoEmpty": "No projects available",
+                    "infoFiltered": "(filtered from _MAX_ total projects)",
+                    "zeroRecords": "No matching projects found"
+                }
+            });
+        });
     </script>
+
 </body>
+
 </html>

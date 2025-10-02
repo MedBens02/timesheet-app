@@ -1,306 +1,195 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.timesheetapp.entity.Project" %>
-<%@ page import="com.timesheetapp.entity.User" %>
-<%@ page import="java.util.List" %>
-<%
-    User currentUser = (User) request.getAttribute("currentUser");
-    Project project = (Project) request.getAttribute("project");
-    List<User> allEmployees = (List<User>) request.getAttribute("allEmployees");
-    List<User> assignedEmployees = (List<User>) request.getAttribute("assignedEmployees");
-%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assign Employees - <%= project.getName() %></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 40px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .header .project-name {
-            font-size: 18px;
-            opacity: 0.9;
-        }
-
-        .content {
-            padding: 40px;
-        }
-
-        .info-box {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 30px;
-        }
-
-        .search-box {
-            margin-bottom: 25px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .employees-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .employee-card {
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .employee-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        .employee-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        }
-
-        .employee-card .checkbox-wrapper {
-            display: flex;
-            align-items: start;
-            gap: 12px;
-        }
-
-        .employee-card input[type="checkbox"] {
-            margin-top: 3px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .employee-info {
-            flex: 1;
-        }
-
-        .employee-name {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .employee-email {
-            font-size: 13px;
-            color: #666;
-        }
-
-        .selection-summary {
-            background: #f8f9fa;
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .selection-summary strong {
-            color: #667eea;
-            font-size: 16px;
-        }
-
-        .quick-actions {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-outline {
-            background: white;
-            color: #667eea;
-            border: 1px solid #667eea;
-        }
-
-        .btn-outline:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .actions {
-            display: flex;
-            gap: 15px;
-            padding-top: 30px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .no-employees {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-        }
-    </style>
+    <title>Assign Employees - ${project.name} - Timesheet Management</title>
+    <jsp:include page="../includes/head.jsp" />
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Assign Employees to Project</h1>
-            <div class="project-name"><%= project.getName() %></div>
-        </div>
 
-        <div class="content">
-            <div class="info-box">
-                <strong>How it works:</strong>
-                Select employees from the list below to assign them to this project.
-                Assigned employees will be able to view the project and its tasks on their dashboard.
-            </div>
+<body id="page-top">
 
-            <% if (allEmployees == null || allEmployees.isEmpty()) { %>
-                <div class="no-employees">
-                    <p>No employees available to assign.</p>
-                </div>
-            <% } else { %>
-                <form action="<%= request.getContextPath() %>/project/save-assignments" method="post" id="assignmentForm">
-                    <input type="hidden" name="projectId" value="<%= project.getId() %>">
+    <!-- Page Wrapper -->
+    <div id="wrapper">
 
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 Search employees by name or email..." onkeyup="filterEmployees()">
-                    </div>
+        <jsp:include page="../includes/sidebar.jsp" />
 
-                    <div class="quick-actions">
-                        <button type="button" class="btn btn-outline btn-sm" onclick="selectAll()">Select All</button>
-                        <button type="button" class="btn btn-outline btn-sm" onclick="deselectAll()">Deselect All</button>
-                    </div>
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
 
-                    <div class="selection-summary">
+            <!-- Main Content -->
+            <div id="content">
+
+                <jsp:include page="../includes/topbar.jsp" />
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <div>
-                            <strong id="selectedCount">0</strong> employee(s) selected
+                            <h1 class="h3 mb-0 text-gray-800">Assign Employees to Project</h1>
+                            <p class="text-gray-600 mb-0">${project.name}</p>
+                        </div>
+                        <a href="${pageContext.request.contextPath}/project/list" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Projects
+                        </a>
+                    </div>
+
+                    <!-- Info Alert -->
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle"></i> <strong>How it works:</strong>
+                        Select employees from the list below to assign them to this project.
+                        Assigned employees will be able to view the project and its tasks on their dashboard.
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Employees Assignment Card -->
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Select Employees</h6>
+                        </div>
+                        <div class="card-body">
+                            <c:choose>
+                                <c:when test="${empty allEmployees}">
+                                    <div class="text-center text-gray-500 py-5">
+                                        <i class="fas fa-users fa-4x mb-3"></i>
+                                        <p class="h5">No employees available to assign</p>
+                                    </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <form action="${pageContext.request.contextPath}/project/save-assignments" method="post" id="assignmentForm">
+                                        <input type="hidden" name="projectId" value="${project.id}">
+
+                                        <!-- Search Box -->
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                                </div>
+                                                <input type="text"
+                                                       class="form-control"
+                                                       id="searchInput"
+                                                       placeholder="Search employees by name or email..."
+                                                       onkeyup="filterEmployees()">
+                                            </div>
+                                        </div>
+
+                                        <!-- Quick Actions -->
+                                        <div class="mb-3">
+                                            <button type="button" class="btn btn-sm btn-outline-primary mr-2" onclick="selectAll()">
+                                                <i class="fas fa-check-double"></i> Select All
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                                                <i class="fas fa-times"></i> Deselect All
+                                            </button>
+                                        </div>
+
+                                        <!-- Selection Summary -->
+                                        <div class="alert alert-light border mb-3" role="alert">
+                                            <strong class="text-primary"><span id="selectedCount">0</span> employee(s) selected</strong>
+                                        </div>
+
+                                        <!-- Employees Grid -->
+                                        <div class="row" id="employeesGrid">
+                                            <c:forEach items="${allEmployees}" var="employee">
+                                                <c:set var="isAssigned" value="${false}" />
+                                                <c:forEach items="${assignedEmployees}" var="assigned">
+                                                    <c:if test="${assigned.id == employee.id}">
+                                                        <c:set var="isAssigned" value="${true}" />
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <div class="col-md-6 col-lg-4 mb-3">
+                                                    <div class="card employee-card ${isAssigned ? 'border-primary' : ''}"
+                                                         data-name="${employee.fullName.toLowerCase()}"
+                                                         data-email="${employee.email.toLowerCase()}">
+                                                        <div class="card-body">
+                                                            <div class="custom-control custom-checkbox">
+                                                                <input type="checkbox"
+                                                                       class="custom-control-input"
+                                                                       name="employeeIds"
+                                                                       value="${employee.id}"
+                                                                       id="emp_${employee.id}"
+                                                                       ${isAssigned ? 'checked' : ''}
+                                                                       onchange="updateCard(this)">
+                                                                <label class="custom-control-label" for="emp_${employee.id}">
+                                                                    <div class="font-weight-bold text-gray-800">${employee.fullName}</div>
+                                                                    <small class="text-gray-600">${employee.email}</small>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+
+                                        <!-- Form Actions -->
+                                        <hr>
+                                        <div class="form-group mb-0">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-save"></i> Save Assignments
+                                            </button>
+                                            <a href="${pageContext.request.contextPath}/project/list" class="btn btn-secondary btn-lg ml-2">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </a>
+                                        </div>
+                                    </form>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
-                    <div class="employees-grid" id="employeesGrid">
-                        <% for (User employee : allEmployees) {
-                            boolean isAssigned = assignedEmployees.stream()
-                                .anyMatch(e -> e.getId().equals(employee.getId()));
-                        %>
-                            <div class="employee-card <%= isAssigned ? "selected" : "" %>" data-name="<%= employee.getFullName().toLowerCase() %>" data-email="<%= employee.getEmail().toLowerCase() %>">
-                                <div class="checkbox-wrapper">
-                                    <input
-                                        type="checkbox"
-                                        name="employeeIds"
-                                        value="<%= employee.getId() %>"
-                                        id="emp_<%= employee.getId() %>"
-                                        <%= isAssigned ? "checked" : "" %>
-                                        onchange="updateCard(this)">
-                                    <label for="emp_<%= employee.getId() %>" class="employee-info">
-                                        <div class="employee-name"><%= employee.getFullName() %></div>
-                                        <div class="employee-email"><%= employee.getEmail() %></div>
-                                    </label>
-                                </div>
-                            </div>
-                        <% } %>
-                    </div>
+                </div>
+                <!-- /.container-fluid -->
 
-                    <div class="actions">
-                        <button type="submit" class="btn btn-primary">
-                            Save Assignments
-                        </button>
-                        <a href="<%= request.getContextPath() %>/project/list" class="btn btn-secondary">
-                            Cancel
-                        </a>
-                    </div>
-                </form>
-            <% } %>
+            </div>
+            <!-- End of Main Content -->
+
+            <jsp:include page="../includes/footer.jsp" />
+
         </div>
+        <!-- End of Content Wrapper -->
+
     </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <jsp:include page="../includes/logout-modal.jsp" />
+
+    <jsp:include page="../includes/scripts.jsp" />
+
+    <!-- Employee Selection Script -->
+    <style>
+        .employee-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .employee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2) !important;
+        }
+
+        .employee-card.border-primary {
+            background: linear-gradient(135deg, rgba(78, 115, 223, 0.05) 0%, rgba(78, 115, 223, 0.1) 100%);
+        }
+    </style>
 
     <script>
         function updateCard(checkbox) {
             const card = checkbox.closest('.employee-card');
             if (checkbox.checked) {
-                card.classList.add('selected');
+                card.classList.add('border-primary');
             } else {
-                card.classList.remove('selected');
+                card.classList.remove('border-primary');
             }
             updateSelectionCount();
         }
@@ -335,17 +224,33 @@
             cards.forEach(card => {
                 const name = card.getAttribute('data-name');
                 const email = card.getAttribute('data-email');
+                const parent = card.closest('.col-md-6');
 
                 if (name.includes(searchTerm) || email.includes(searchTerm)) {
-                    card.style.display = '';
+                    parent.style.display = '';
                 } else {
-                    card.style.display = 'none';
+                    parent.style.display = 'none';
                 }
             });
         }
 
-        // Initialize selection count on page load
-        updateSelectionCount();
+        // Click on card to toggle checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.employee-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                        updateCard(checkbox);
+                    }
+                });
+            });
+
+            // Initialize selection count on page load
+            updateSelectionCount();
+        });
     </script>
+
 </body>
+
 </html>

@@ -12,15 +12,26 @@ import java.util.List;
 import java.util.Optional;
 
 public class TimesheetDAOImpl extends BaseDAOImpl<Timesheet, Long> implements TimesheetDAO {
-    
+
+    @Override
+    public Optional<Timesheet> findById(Long id) {
+        List<Timesheet> results = executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.id = ?1", id);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
+
+    @Override
+    public List<Timesheet> findAll() {
+        return executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user");
+    }
+
     @Override
     public List<Timesheet> findByUser(User user) {
-        return executeQuery("SELECT t FROM Timesheet t WHERE t.user = ?1", user);
+        return executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.user = ?1", user);
     }
-    
+
     @Override
     public List<Timesheet> findByStatus(Timesheet.TimesheetStatus status) {
-        return executeQuery("SELECT t FROM Timesheet t WHERE t.status = ?1", status);
+        return executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.status = ?1", status);
     }
     
     @Override
@@ -28,7 +39,7 @@ public class TimesheetDAOImpl extends BaseDAOImpl<Timesheet, Long> implements Ti
         EntityManager em = EntityManagerUtil.getEntityManager();
         try {
             TypedQuery<Timesheet> query = em.createQuery(
-                "SELECT t FROM Timesheet t WHERE t.user = :user AND t.weekStartDate = :weekStart", 
+                "SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.user = :user AND t.weekStartDate = :weekStart",
                 Timesheet.class);
             query.setParameter("user", user);
             query.setParameter("weekStart", weekStartDate);
@@ -41,11 +52,11 @@ public class TimesheetDAOImpl extends BaseDAOImpl<Timesheet, Long> implements Ti
             em.close();
         }
     }
-    
+
     @Override
     public List<Timesheet> findByUserAndDateRange(User user, LocalDate startDate, LocalDate endDate) {
         return executeQuery(
-            "SELECT t FROM Timesheet t WHERE t.user = ?1 AND t.weekStartDate >= ?2 AND t.weekEndDate <= ?3", 
+            "SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.user = ?1 AND t.weekStartDate >= ?2 AND t.weekEndDate <= ?3",
             user, startDate, endDate);
     }
     
@@ -76,29 +87,29 @@ public class TimesheetDAOImpl extends BaseDAOImpl<Timesheet, Long> implements Ti
     
     @Override
     public List<Timesheet> findTimesheetsByValidator(User validator) {
-        return executeQuery("SELECT t FROM Timesheet t WHERE t.validatedBy = ?1", validator);
+        return executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.validatedBy = ?1", validator);
     }
-    
+
     @Override
     public List<Timesheet> findTimesheetsInWeek(LocalDate weekStartDate) {
-        return executeQuery("SELECT t FROM Timesheet t WHERE t.weekStartDate = ?1", weekStartDate);
+        return executeQuery("SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.weekStartDate = ?1", weekStartDate);
     }
-    
+
     @Override
     public List<Timesheet> findTimesheetsInMonth(int year, int month) {
         LocalDate startOfMonth = LocalDate.of(year, month, 1);
         LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
         return executeQuery(
-            "SELECT t FROM Timesheet t WHERE t.weekStartDate >= ?1 AND t.weekStartDate <= ?2", 
+            "SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.weekStartDate >= ?1 AND t.weekStartDate <= ?2",
             startOfMonth, endOfMonth);
     }
-    
+
     @Override
     public List<Timesheet> findTimesheetsInYear(int year) {
         LocalDate startOfYear = LocalDate.of(year, 1, 1);
         LocalDate endOfYear = LocalDate.of(year, 12, 31);
         return executeQuery(
-            "SELECT t FROM Timesheet t WHERE t.weekStartDate >= ?1 AND t.weekStartDate <= ?2", 
+            "SELECT t FROM Timesheet t JOIN FETCH t.user WHERE t.weekStartDate >= ?1 AND t.weekStartDate <= ?2",
             startOfYear, endOfYear);
     }
 }
